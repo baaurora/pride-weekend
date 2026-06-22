@@ -212,6 +212,10 @@ const ITEMS = [
   {id:'whitney', cat:'culture', day:'THU', time:'Daytime', area:'Meatpacking', name:'Whitney Museum',
    desc:'Free for everyone 25 & under, any day — just book a free timed ticket at whitney.org. At the foot of the High Line, so it pairs perfectly with the Chelsea galleries. Open till 10 PM Fri; closed Tue.',
    tickets:'free', lat:40.7397, lng:-74.0089},
+  {id:'thaivilla', cat:'anchor', day:'THU', time:'6 PM', area:'Union Square', name:'Thai Villa — Dinner Reservation',
+   addr:'Thai Villa · 5 E 19th St',
+   desc:'Reservation for the crew, 6 PM Thursday. Elegant royal-Thai in Union Square — beautiful room, traditional recipes. Dinner before the warehouse parties.',
+   tickets:null, lat:40.738995, lng:-73.990669},
   {id:'gaydar', cat:'event', day:'THU', time:'10 PM', area:'Bushwick', name:'Gaydar Pride — House of Yes',
    addr:'House of Yes · 2 Wyckoff Ave, Brooklyn (enter 408 Jefferson St)',
    desc:'Drag from Anania + Amanda Tori Meating. Around $25.50.',
@@ -366,11 +370,6 @@ const ITEMS = [
   {id:'lind-litaly', cat:'food', day:'any', area:'Little Italy', name:'L’Industrie Pizzeria (Little Italy)',
    desc:'Newest spot — 197 Grand St, between Mulberry & Mott. Same legendary square slices.',
    tickets:null, lat:40.7188, lng:-73.9967},
-
-  // ---- Anytime: Thai ----
-  {id:'thaivilla', cat:'food', day:'any', area:'Union Square', name:'Thai Villa',
-   desc:'Elegant royal-Thai in Union Square — 5 E 19th St. Beautiful room, traditional recipes. Reserve ahead.',
-   tickets:null, lat:40.738995, lng:-73.990669},
 ];
 const byId = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 
