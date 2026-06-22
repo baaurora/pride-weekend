@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bianca, Brent & Friends · NYC Pride Weekend 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --c-red:#ff5a5f; --c-org:#ff8a3d; --c-yel:#ffcd3c; --c-grn:#26c281;
+    --c-blu:#2f9bff; --c-pur:#a855f7; --c-pnk:#ff3d9a;
+    --ink:#1d1b2e; --muted:#6b6880; --line:#ece8f4; --bg:#faf8ff; --card:#ffffff;
+    --rainbow:linear-gradient(90deg,#ff5a5f,#ff8a3d,#ffcd3c,#26c281,#2f9bff,#a855f7);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    display:flex;flex-direction:column;min-height:100dvh;
+  }
+
+  /* ---------- Header ---------- */
+  header{position:relative;overflow:hidden;color:#fff;
+    background:linear-gradient(120deg,#ff5a5f,#ff3d9a 22%,#a855f7 46%,#2f9bff 68%,#26c281 88%,#ffcd3c);}
+  header .wrap{padding:22px 26px 26px;position:relative;z-index:2;}
+  header h1{font-family:'Fredoka',sans-serif;font-weight:700;margin:0;
+    font-size:clamp(26px,4.2vw,40px);letter-spacing:.3px;
+    text-shadow:0 2px 14px rgba(0,0,0,.18);}
+  header .flag{font-size:.85em;margin-right:.15em;-webkit-text-stroke:0;text-shadow:none;}
+  header p{margin:6px 0 0;font-weight:500;font-size:clamp(13px,1.8vw,16px);opacity:.97;
+    text-shadow:0 1px 8px rgba(0,0,0,.2);}
+  header .stats{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  header .stat{background:rgba(255,255,255,.22);backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,.35);border-radius:999px;
+    padding:5px 12px;font-size:12.5px;font-weight:600;}
+  .stripe{height:7px;background:var(--rainbow);}
+
+  /* ---------- Layout ---------- */
+  .layout{flex:1;display:flex;min-height:0;}
+  aside{width:400px;flex:none;overflow-y:auto;background:var(--bg);
+    border-right:1px solid var(--line);}
+  #map{flex:1;min-height:0;background:#e9f0f5;}
+
+  /* ---------- Filters ---------- */
+  .filters{position:sticky;top:0;z-index:5;background:rgba(250,248,255,.93);
+    backdrop-filter:blur(8px);padding:13px 16px 12px;border-bottom:1px solid var(--line);}
+  .lbl{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    color:var(--muted);margin:0 0 7px 2px;}
+  .lbl.two{margin-top:11px}
+  .pills,.dpills{display:flex;flex-wrap:wrap;gap:7px}
+  .pill{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
+    border:1.5px solid var(--pc);color:var(--pc);background:var(--card);
+    padding:6px 11px;border-radius:999px;font-size:12.5px;font-weight:600;transition:all .15s;}
+  .pill .dot{width:9px;height:9px;border-radius:50%;background:var(--pc)}
+  .pill.active{background:var(--pc);color:#fff;box-shadow:0 2px 8px -2px var(--pc)}
+  .pill.active .dot{background:#fff}
+  .pill.off{opacity:.5;filter:grayscale(.3)}
+  .pill .ct{font-size:11px;opacity:.85}
+  /* day pills — the second axis, rainbow when on */
+  .dpill{cursor:pointer;user-select:none;border:1.5px solid #d9d2ec;color:#4a4760;
+    background:var(--card);padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;transition:all .15s;}
+  .dpill.active{background:linear-gradient(120deg,#ff3d9a,#a855f7,#2f9bff);color:#fff;border-color:transparent;
+    box-shadow:0 2px 9px -3px #a855f7}
+  .dpill.off{opacity:.5}
+  .legend-note{font-size:11.5px;color:var(--muted);padding:11px 2px 0;line-height:1.5}
+
+  /* ---------- Guide ---------- */
+  .guide{padding:6px 16px 30px}
+  .day{margin-top:16px}
+  .day-head{display:flex;align-items:center;gap:9px;padding:5px 3px 7px;cursor:pointer;user-select:none;}
+  .day-head:hover .dow{opacity:.78}
+  .day-head .caret{font-size:11px;color:var(--muted);transition:transform .22s;display:inline-block;width:11px;text-align:center}
+  .day.collapsed .caret{transform:rotate(-90deg)}
+  .day-head .dow{font-family:'Fredoka',sans-serif;font-weight:700;font-size:18px}
+  .day-head .date{font-size:12.5px;font-weight:600;color:var(--muted)}
+  .day-head .day-count{margin-left:auto;font-size:11px;font-weight:700;color:#fff;
+    background:linear-gradient(120deg,#a855f7,#2f9bff);padding:2px 9px;border-radius:999px;min-width:22px;text-align:center}
+  .day-rule{height:3px;border-radius:3px;background:var(--rainbow);opacity:.55;margin:0 2px 10px}
+  .day.collapsed .day-rule{opacity:.28}
+  .day.collapsed .day-body{display:none}
+  .day-sub{font-size:12px;color:var(--muted);margin:0 2px 9px;font-style:italic}
+
+  .card{display:flex;gap:11px;background:var(--card);border:1px solid var(--line);
+    border-left:4px solid var(--cc);border-radius:13px;padding:11px 12px;margin-bottom:9px;
+    cursor:pointer;transition:transform .12s,box-shadow .12s;}
+  .card:hover{transform:translateY(-1px);box-shadow:0 7px 18px -10px rgba(60,40,90,.45);}
+  .card.lit{box-shadow:0 0 0 2px var(--cc),0 8px 20px -10px var(--cc);}
+  .card .ic{flex:none;width:34px;height:34px;border-radius:10px;display:flex;
+    align-items:center;justify-content:center;font-size:17px;background:var(--cc1);}
+  .card .body{min-width:0;flex:1}
+  .card .nm{font-weight:700;font-size:14.5px;line-height:1.25}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .t-cat,.t-day{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;line-height:1.3}
+  .t-cat{color:#fff}
+  .t-day{background:#f0ebfb;color:#6b3fb0}
+  .c-addr{font-size:12px;color:#5a5770;margin-top:6px;font-weight:600}
+  .c-addr.light{color:#8a8799;font-weight:500}
+  .c-addr .gi{margin-right:3px}
+  .desc{font-size:12.5px;color:#4a4760;margin-top:6px;line-height:1.42}
+  .c-foot{display:flex;align-items:center;gap:9px;margin-top:8px;flex-wrap:wrap}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:3px 8px;border-radius:999px}
+  .badge.need{background:#fff0f5;color:#d61e74;border:1px solid #ffc7df}
+  .badge.have{background:#eafaf2;color:#0f9d58;border:1px solid #b8eccf}
+  .badge.free{background:#eef4ff;color:#2563eb;border:1px solid #c8dcff}
+  .cbuy{font-size:11px;font-weight:700;color:#fff;text-decoration:none;padding:5px 11px;border-radius:999px;
+    background:linear-gradient(120deg,#ff3d9a,#a855f7);white-space:nowrap}
+  .cbuy.have{background:linear-gradient(120deg,#26c281,#2f9bff)}
+
+  /* ---------- Popup ---------- */
+  .leaflet-popup-content-wrapper{border-radius:15px;box-shadow:0 14px 36px -10px rgba(40,20,70,.5)}
+  .leaflet-popup-content{margin:14px 16px;font-family:'Inter',sans-serif;width:248px !important}
+  .pop-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .pop-tags .tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;line-height:1.3}
+  .pop-tags .cat{color:#fff}
+  .pop-tags .day{background:#f0ebfb;color:#6b3fb0}
+  .pop h3{font-family:'Fredoka',sans-serif;margin:2px 0 6px;font-size:17px;line-height:1.18;color:var(--ink)}
+  .pop-addr{font-size:12.5px;color:#3f3c54;font-weight:600;margin-bottom:7px;line-height:1.4}
+  .pop-addr.light{font-weight:500;color:#7a7790}
+  .pop-addr .gi{margin-right:3px}
+  .pop p{margin:0 0 9px;font-size:12.8px;line-height:1.46;color:#3f3c54}
+  .tk-row{margin-bottom:9px}
+  .tk{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .tk.need{background:#fff0f5;color:#d61e74}
+  .tk.have{background:#eafaf2;color:#0f9d58}
+  .tk.free{background:#eef4ff;color:#2563eb}
+  .pop-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .buy{font-size:12.5px;font-weight:700;color:#fff;text-decoration:none;padding:8px 14px;border-radius:999px;
+    background:linear-gradient(120deg,#ff3d9a,#a855f7);box-shadow:0 4px 12px -4px #a855f7}
+  .buy.have{background:linear-gradient(120deg,#26c281,#2f9bff);box-shadow:0 4px 12px -4px #2f9bff}
+  .dir{font-size:12.5px;font-weight:700;color:#7a3df0;text-decoration:none;padding:8px 12px;border-radius:999px;
+    border:1.5px solid #e3d9f6;background:#fff}
+  .leaflet-div-icon{background:transparent;border:none}
+  .pin{display:flex;align-items:center;justify-content:center;width:34px;height:34px;
+    border-radius:50%;border:3px solid #fff;font-size:16px;box-shadow:0 3px 7px rgba(30,10,50,.4);}
+
+  aside::-webkit-scrollbar{width:9px}
+  aside::-webkit-scrollbar-thumb{background:#dcd5ef;border-radius:9px;border:2px solid var(--bg)}
+
+  @media(max-width:840px){
+    .layout{flex-direction:column}
+    aside{width:auto;order:2;max-height:none;overflow:visible}
+    #map{order:1;height:54vh;flex:none}
+    .filters{position:static}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1><span class="flag">🏳️‍🌈</span> Bianca, Brent &amp; Friends</h1>
+      <p>NYC Pride Weekend · Thursday June 25 – Sunday June 28, 2026</p>
+      <div class="stats">
+        <span class="stat">📍 31 spots</span>
+        <span class="stat">🌈 4 nights out</span>
+        <span class="stat">🎟 3 to book</span>
+        <span class="stat">🎉 Lucy &amp; Amelia’s parties</span>
+      </div>
+    </div>
+  </header>
+  <div class="stripe"></div>
+
+  <div class="layout">
+    <aside>
+      <div class="filters">
+        <p class="lbl">Filter by type</p>
+        <div class="pills" id="pills"></div>
+        <p class="lbl two">Filter by day &amp; time</p>
+        <div class="dpills" id="dpills"></div>
+        <p class="legend-note">Brent’s flexible picks (cafés, food &amp; culture) start hidden — tap those type pills to add them to the map. Tap any card or pin for times, address, tickets &amp; directions, and tap a day header to collapse it.</p>
+      </div>
+      <div class="guide" id="guide"></div>
+    </aside>
+    <div id="map"></div>
+  </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ---------------- Categories ---------------- */
+const CATS = {
+  event:  {label:'Events',  color:'#ff3d9a', tint:'#ffe6f2', emoji:'🎉'},
+  anchor: {label:'Anchors', color:'#a855f7', tint:'#f1e7ff', emoji:'⭐'},
+  bar:    {label:'Bars',    color:'#0ea5a4', tint:'#dcf3f1', emoji:'🍸'},
+  culture:{label:'Culture', color:'#26c281', tint:'#e3f8ee', emoji:'🎨'},
+  cafe:   {label:'Cafés',   color:'#2f9bff', tint:'#e6f2ff', emoji:'☕'},
+  food:   {label:'Food',    color:'#ff8a3d', tint:'#fff0e3', emoji:'🍴'},
+};
+
+/* ---------------- Days (the 2nd tag axis) ---------------- */
+const DAYS = [
+  {key:'THU', dow:'Thursday', short:'Thu', date:'Jun 25', num:'25', sub:'Galleries by day, warehouse parties by night.'},
+  {key:'FRI', dow:'Friday',   short:'Fri', date:'Jun 26', num:'26', sub:'Free MoMA → Lucy’s birthday → Paragon till 3.'},
+  {key:'SAT', dow:'Saturday', short:'Sat', date:'Jun 27', num:'27', sub:'Pure Honey ballroom at House of Yes.'},
+  {key:'SUN', dow:'Sunday',   short:'Sun', date:'Jun 28', num:'28', sub:'March past Stonewall, then Amelia’s picnic.'},
+  {key:'any', dow:'Anytime',  short:'Any', date:'',       num:'',   sub:'Work cafés & food to fit around the chaos.'},
+];
+const dayObj = k => DAYS.find(d=>d.key===k) || {};
+const dtLong  = it => it.day==='any' ? 'Anytime' : `${dayObj(it.day).dow}, ${dayObj(it.day).date}${it.time?' · '+it.time:''}`;
+const dtShort = it => it.day==='any' ? 'Anytime' : `${dayObj(it.day).short} ${dayObj(it.day).num}${it.time?' · '+it.time:''}`;
+
+/* ---------------- Spots ----------------
+   addr + buy button: events & anchors (scheduled/ticketed).
+   cafés, food, culture: neighbourhood only (Brent's flexible picks). */
+const ITEMS = [
+  // ---- Thursday ----
+  {id:'chelsea', cat:'culture', day:'THU', time:'Daytime', area:'Chelsea', name:'Chelsea Gallery Walk (Dia Chelsea)',
+   desc:'West 20s near 10th Ave — wall-to-wall free galleries; Dia Chelsea (22nd St) is the anchor. Pair it with the High Line.',
+   tickets:'free', lat:40.7470, lng:-74.0048},
+  {id:'gaydar', cat:'event', day:'THU', time:'10 PM', area:'Bushwick', name:'Gaydar Pride — House of Yes',
+   addr:'House of Yes · 2 Wyckoff Ave, Brooklyn (enter 408 Jefferson St)',
+   desc:'Drag from Anania + Amanda Tori Meating. Around $25.50.',
+   tickets:'need', url:'houseofyes.org/calendar', urlLabel:'🎟 Get tickets', lat:40.7068, lng:-73.9236},
+  {id:'futch', cat:'event', day:'THU', time:'10 PM – 4 AM', area:'East Williamsburg', name:'Futch — 9 Bob Note',
+   addr:'3 Dollar Bill · 260 Meserole St, Brooklyn',
+   desc:'About a 10-minute walk from House of Yes — easy second stop.',
+   tickets:'need', url:'3dollarbillbk.com/rsvp', urlLabel:'🎟 RSVP', lat:40.7085152, lng:-73.9377776},
+
+  // ---- Friday ----
+  {id:'moma', cat:'culture', day:'FRI', time:'5:30 – 9 PM', area:'Midtown', name:'MoMA — Free Friday Night',
+   desc:'Free for everyone 5:30–9 PM (Uniqlo Free Fridays). Arrive before 5:30. Whitney is also free Fri night.',
+   tickets:'free', lat:40.7614, lng:-73.9776},
+  {id:'lucy', cat:'anchor', day:'FRI', time:'9:30 PM', area:'Nolita', name:'Lucy’s Birthday — Café Select',
+   addr:'Café Select · 212 Lafayette St',
+   desc:'Cozy Swiss bistro. No ticket — just show up.',
+   tickets:null, lat:40.7217849, lng:-73.9978025},
+  {id:'paragon', cat:'event', day:'FRI', time:'9:30 PM – 3 AM', area:'Bushwick · 21+', name:'Paragon Pride — Thunderpuss b2b Mike Servito',
+   addr:'Paragon · 990 Broadway, Brooklyn',
+   desc:'Techno & house all night. You’re covered here.',
+   tickets:'have', url:'ra.co/events/2415369', urlLabel:'🎟 View event', lat:40.6961068, lng:-73.9340684},
+
+  // ---- Friday backup: queer bars within reach of Paragon, if you get bored ----
+  {id:'happyfun', cat:'bar', day:'FRI', time:'Open late', area:'Bushwick', name:'Happyfun Hideaway',
+   addr:'1211 Myrtle Ave, Brooklyn',
+   desc:'Queer tiki-dive with a backyard, cheap drinks & local DJs. ~8-min walk from Paragon — the easy bail-out.',
+   tickets:null, lat:40.6985, lng:-73.9275},
+  {id:'moodring', cat:'bar', day:'FRI', time:'Open late', area:'Bushwick', name:'Mood Ring',
+   addr:'1260 Myrtle Ave, Brooklyn',
+   desc:'Astrology-themed queer bar & club with a DJ back room. A few doors past Happyfun, ~9 min from Paragon.',
+   tickets:null, lat:40.6988, lng:-73.9263},
+  {id:'thebush', cat:'bar', day:'FRI', time:'Open late', area:'Bushwick', name:'The Bush',
+   addr:'333 Troutman St, Brooklyn',
+   desc:'“A dyke bar for queers” — Bushwick’s lesbian/queer spot. A bit further NE (~15-min walk or quick ride).',
+   tickets:null, lat:40.7056, lng:-73.9230},
+
+  // ---- Saturday ----
+  {id:'purehoney', cat:'event', day:'SAT', time:'10 PM', area:'Bushwick', name:'Pure Honey Pride — House of Yes',
+   addr:'House of Yes · 2 Wyckoff Ave, Brooklyn (enter 408 Jefferson St)',
+   desc:'Ballroom legends: Mike Q, Kevin Aviance, David Elimelech. From about $18.',
+   tickets:'need', url:'houseofyes.org/calendar', urlLabel:'🎟 Get tickets', lat:40.7068, lng:-73.9236},
+
+  // ---- Sunday ----
+  {id:'march', cat:'anchor', day:'SUN', time:'Steps off noon', area:'West Village', name:'NYC Pride March — Stonewall watch point',
+   addr:'Christopher St & 7th Ave S (by the Stonewall Inn)',
+   desc:'Free. The march passes Stonewall — catch it here, then loop back to the picnic.',
+   tickets:'free', lat:40.7338326, lng:-74.0021626},
+  {id:'amelia', cat:'anchor', day:'SUN', time:'From 11 AM', area:'Greenwich Village', name:'Amelia’s Picnic — Washington Square Park',
+   addr:'Washington Square Park (by the fountain)',
+   desc:'Picnic kicks off 11 AM. The march funnels right through here all day — perfect home base.',
+   tickets:null, lat:40.7308838, lng:-73.997332},
+
+  // ---- Anytime: Brent's cafés ----
+  {id:'787', cat:'cafe', day:'any', area:'Chelsea', name:'787 Coffee (15th St)',
+   desc:'Roomy with lots of comfy seating, fast free WiFi. 4.9★. Get the marzipan latte.',
+   tickets:null, lat:40.7370, lng:-73.9967},
+  {id:'paper', cat:'cafe', day:'any', area:'NoMad', name:'Paper Coffee',
+   desc:'Airy 18th-floor hotel café — big windows, real tables, free WiFi.',
+   tickets:null, lat:40.7445, lng:-73.9888},
+  {id:'lyria', cat:'cafe', day:'any', area:'SoHo', name:'Café Lyria',
+   desc:'Crosby St Greek spot regulars call perfect for working. Fast WiFi.',
+   tickets:null, lat:40.7235, lng:-73.9962},
+  {id:'lostdraft', cat:'cafe', day:'any', area:'SoHo', name:'The Lost Draft',
+   desc:'Roomy, house-made pastries, separate quiet room. 4.7★. Free WiFi.',
+   tickets:null, lat:40.7250, lng:-73.9995},
+
+  // ---- Anytime: Brent's food ----
+  {id:'vinaio', cat:'food', day:'any', area:'Midtown', name:'All’Antico Vinaio (Midtown)',
+   desc:'Famous Florentine schiacciata sandwiches — huge & splittable. Get the Paradiso, go off-peak.',
+   tickets:null, lat:40.7589, lng:-73.9845},
+  {id:'vinaio-flat', cat:'food', day:'any', area:'Flatiron', name:'All’Antico Vinaio (Flatiron)',
+   desc:'Flatiron outpost (7 W 25th St, by Madison Square Park) — same huge, splittable schiacciata. Get the Paradiso.',
+   tickets:null, lat:40.7441, lng:-73.9897},
+  {id:'lexpress', cat:'food', day:'any', area:'Union Sq', name:'L’Express',
+   desc:'Classic French bistro on Park Ave South, open nearly 24h. Onion soup, steak frites, croque.',
+   tickets:null, lat:40.7385, lng:-73.9875},
+  {id:'butcher', cat:'food', day:'any', area:'Nolita', name:'The Butcher’s Daughter',
+   desc:'Bright veg-forward café — avocado toast, grain bowls, fresh juices.',
+   tickets:null, lat:40.7219, lng:-73.9962},
+  {id:'butler', cat:'food', day:'any', area:'SoHo', name:'Butler Bakeshop',
+   desc:'Lafayette St — fast, good lunch: avocado toast, pastries, espresso.',
+   tickets:null, lat:40.7240, lng:-73.9958},
+
+  // ---- Anytime: La Pecora Bianca (all NYC outposts) ----
+  {id:'lpb-nomad', cat:'food', day:'any', area:'NoMad', name:'La Pecora Bianca (NoMad)',
+   desc:'The original — vibrant all-day Italian at 1133 Broadway, on Madison Square Park. Handmade pasta, cacio e pepe, spritzes.',
+   tickets:null, lat:40.7443, lng:-73.9894},
+  {id:'lpb-mide', cat:'food', day:'any', area:'Midtown East', name:'La Pecora Bianca (Midtown East)',
+   desc:'All-day Italian at 950 2nd Ave (~50th St). Sunny room, fresh pasta.',
+   tickets:null, lat:40.7550, lng:-73.9675},
+  {id:'lpb-bryant', cat:'food', day:'any', area:'Bryant Park', name:'La Pecora Bianca (Bryant Park)',
+   desc:'On the south side of Bryant Park, 20 W 40th St. Easy work lunch or aperitivo.',
+   tickets:null, lat:40.7522, lng:-73.9828},
+  {id:'lpb-soho', cat:'food', day:'any', area:'SoHo', name:'La Pecora Bianca (SoHo)',
+   desc:'All-day Italian at 54 Prince St, SoHo/Nolita. Pasta, pizza, wine.',
+   tickets:null, lat:40.7234, lng:-73.9956},
+  {id:'lpb-ues', cat:'food', day:'any', area:'Upper East Side', name:'La Pecora Bianca (UES)',
+   desc:'Cozy uptown room at 1562 2nd Ave (~81st St). Same handmade pastas.',
+   tickets:null, lat:40.7747, lng:-73.9533},
+  {id:'lpb-uws', cat:'food', day:'any', area:'Upper West Side', name:'La Pecora Bianca (UWS)',
+   desc:'By the Natural History Museum — 359 Columbus Ave at W 77th St. All-day Italian.',
+   tickets:null, lat:40.7806, lng:-73.9760},
+
+  // ---- Anytime: L'Industrie Pizzeria (all locations) ----
+  {id:'lind-wburg', cat:'food', day:'any', area:'Williamsburg', name:'L’Industrie Pizzeria (Williamsburg)',
+   desc:'The original — cult-favorite Brooklyn slices at 254 S 2nd St. Cash-friendly, expect a line. Try the burrata slice.',
+   tickets:null, lat:40.7126, lng:-73.9576},
+  {id:'lind-wvill', cat:'food', day:'any', area:'West Village', name:'L’Industrie Pizzeria (West Village)',
+   desc:'Manhattan outpost of the famed slice shop — 104 Christopher St. Burrata slice, pistachio mortadella.',
+   tickets:null, lat:40.7331897, lng:-74.0049247},
+  {id:'lind-litaly', cat:'food', day:'any', area:'Little Italy', name:'L’Industrie Pizzeria (Little Italy)',
+   desc:'Newest spot — 197 Grand St, between Mulberry & Mott. Same legendary square slices.',
+   tickets:null, lat:40.7188, lng:-73.9967},
+
+  // ---- Anytime: Thai ----
+  {id:'thaivilla', cat:'food', day:'any', area:'Union Square', name:'Thai Villa',
+   desc:'Elegant royal-Thai in Union Square — 5 E 19th St. Beautiful room, traditional recipes. Reserve ahead.',
+   tickets:null, lat:40.738995, lng:-73.990669},
+];
+const byId = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+
+/* ---------------- Map ---------------- */
+const map = L.map('map',{zoomControl:true,scrollWheelZoom:true}).setView([40.728,-73.99],12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:19,subdomains:'abcd'
+}).addTo(map);
+
+function dirUrl(it){
+  const dest = it.addr ? encodeURIComponent(it.addr.replace(/^[^·]+· /,'').replace(/\s*\([^)]*\)/g,'') + ', New York') : `${it.lat},${it.lng}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+}
+function popupHtml(it){
+  const c = CATS[it.cat];
+  const buy = it.url ? `<a class="buy ${it.tickets==='have'?'have':''}" href="https://${it.url}" target="_blank" rel="noopener">${it.urlLabel||'Details'} ↗</a>` : '';
+  const tk = it.tickets==='need' ? '<span class="tk need">🎟 Need tickets</span>'
+           : it.tickets==='have' ? '<span class="tk have">✓ Have tickets</span>'
+           : it.tickets==='free' ? '<span class="tk free">Free entry</span>' : '';
+  const addr = it.addr ? `<div class="pop-addr"><span class="gi">📍</span>${it.addr}</div>`
+             : (it.area ? `<div class="pop-addr light"><span class="gi">📍</span>${it.area}</div>` : '');
+  return `<div class="pop">
+    <div class="pop-tags">
+      <span class="tag cat" style="background:${c.color}">${c.emoji} ${c.label}</span>
+      <span class="tag day">📅 ${dtLong(it)}</span>
+    </div>
+    <h3>${it.name}</h3>
+    ${addr}
+    <p>${it.desc}</p>
+    ${tk?`<div class="tk-row">${tk}</div>`:''}
+    <div class="pop-actions">
+      ${buy}
+      <a class="dir" href="${dirUrl(it)}" target="_blank" rel="noopener">🧭 Directions</a>
+    </div>
+  </div>`;
+}
+
+const allMarkers = [];
+const markers = {};
+const seen = {};
+ITEMS.forEach(it=>{
+  const key = it.lat.toFixed(5)+','+it.lng.toFixed(5);
+  if(seen[key]){ it.lng += 0.00055*seen[key]; it.lat += 0.00035*seen[key]; }
+  seen[key] = (seen[key]||0)+1;
+
+  const c = CATS[it.cat];
+  const icon = L.divIcon({className:'',
+    html:`<div class="pin" style="background:${c.color}">${c.emoji}</div>`,
+    iconSize:[34,34], iconAnchor:[17,17], popupAnchor:[0,-17]});
+  const m = L.marker([it.lat,it.lng],{icon}).bindPopup(popupHtml(it),
+    {maxWidth:280, autoPanPaddingTopLeft:[18,24], autoPanPaddingBottomRight:[18,18], keepInView:true});
+  m.on('popupopen', ()=>highlight(it.id));
+  m.addTo(map);
+  markers[it.id] = m;
+  allMarkers.push({id:it.id, cat:it.cat, day:it.day, m});
+});
+
+// initial map framing happens after filters are applied (see bottom of script)
+
+/* ---------------- Filters: two axes ----------------
+   Brent's flexible picks (cafés, food, culture) start hidden so the map
+   opens on just the Pride plan. Flip their type pills on to add them. */
+const BRENT_CATS = ['cafe','food','culture'];
+const activeCats = new Set(Object.keys(CATS).filter(c=>!BRENT_CATS.includes(c)));
+const activeDays = new Set(DAYS.map(d=>d.key));
+
+const pillsEl = document.getElementById('pills');
+for(const c in CATS){
+  const meta = CATS[c], ct = ITEMS.filter(i=>i.cat===c).length;
+  const p = document.createElement('div');
+  p.className = 'pill' + (activeCats.has(c)?' active':' off'); p.dataset.cat=c; p.style.setProperty('--pc',meta.color);
+  p.innerHTML = `<span class="dot"></span>${meta.emoji} ${meta.label} <span class="ct">${ct}</span>`;
+  p.onclick = ()=>{ activeCats.has(c)?activeCats.delete(c):activeCats.add(c); applyFilters(); };
+  pillsEl.appendChild(p);
+}
+
+const dpillsEl = document.getElementById('dpills');
+DAYS.forEach(d=>{
+  const ct = ITEMS.filter(i=>i.day===d.key).length;
+  if(!ct) return;
+  const dp = document.createElement('div');
+  dp.className='dpill active'; dp.dataset.day=d.key;
+  dp.textContent = d.key==='any' ? 'Anytime' : `${d.short} ${d.num}`;
+  dp.onclick = ()=>{ activeDays.has(d.key)?activeDays.delete(d.key):activeDays.add(d.key); applyFilters(); };
+  dpillsEl.appendChild(dp);
+});
+
+/* ---------------- Guide list ---------------- */
+const guideEl = document.getElementById('guide');
+DAYS.forEach(d=>{
+  const its = ITEMS.filter(i=>i.day===d.key);
+  if(!its.length) return;
+  const sec = document.createElement('section');
+  sec.className='day'; sec.dataset.day=d.key;
+  sec.innerHTML = `<div class="day-head">
+      <span class="caret">▾</span>
+      <span class="dow">${d.dow}</span><span class="date">${d.date}</span>
+      <span class="day-count"></span>
+    </div>
+    <div class="day-rule"></div>
+    <div class="day-body"><div class="day-sub">${d.sub}</div></div>`;
+  const body = sec.querySelector('.day-body');
+  sec.querySelector('.day-head').addEventListener('click', ()=> sec.classList.toggle('collapsed'));
+  its.forEach(it=>{
+    const c = CATS[it.cat];
+    const tk = it.tickets==='need' ? '<span class="badge need">🎟 Need tickets</span>'
+             : it.tickets==='have' ? '<span class="badge have">✓ Have tickets</span>'
+             : it.tickets==='free' ? '<span class="badge free">Free</span>' : '';
+    const buy = it.url ? `<a class="cbuy ${it.tickets==='have'?'have':''}" href="https://${it.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${it.urlLabel} ↗</a>` : '';
+    const addr = it.addr ? `<div class="c-addr"><span class="gi">📍</span>${it.addr}</div>`
+               : (it.area ? `<div class="c-addr light"><span class="gi">📍</span>${it.area}</div>` : '');
+    const card = document.createElement('div');
+    card.className='card'; card.dataset.cat=it.cat; card.dataset.day=it.day; card.dataset.id=it.id;
+    card.style.setProperty('--cc',c.color); card.style.setProperty('--cc1',c.tint);
+    card.innerHTML = `<div class="ic">${c.emoji}</div>
+      <div class="body">
+        <div class="nm">${it.name}</div>
+        <div class="tags">
+          <span class="t-cat" style="background:${c.color}">${c.emoji} ${c.label}</span>
+          <span class="t-day">📅 ${dtShort(it)}</span>
+        </div>
+        ${addr}
+        <div class="desc">${it.desc}</div>
+        ${(tk||buy)?`<div class="c-foot">${tk}${buy}</div>`:''}
+      </div>`;
+    card.onclick = ()=> focusItem(it.id);
+    body.appendChild(card);
+  });
+  guideEl.appendChild(sec);
+});
+
+/* ---------------- Interactions ---------------- */
+function applyFilters(){
+  allMarkers.forEach(o=>{
+    const show = activeCats.has(o.cat) && activeDays.has(o.day);
+    if(show && !map.hasLayer(o.m)) o.m.addTo(map);
+    if(!show && map.hasLayer(o.m)) map.removeLayer(o.m);
+  });
+  document.querySelectorAll('.pill').forEach(p=>{
+    const on = activeCats.has(p.dataset.cat); p.classList.toggle('active',on); p.classList.toggle('off',!on);
+  });
+  document.querySelectorAll('.dpill').forEach(p=>{
+    const on = activeDays.has(p.dataset.day); p.classList.toggle('active',on); p.classList.toggle('off',!on);
+  });
+  document.querySelectorAll('.card').forEach(c=>{
+    c.style.display = (activeCats.has(c.dataset.cat) && activeDays.has(c.dataset.day)) ? '' : 'none';
+  });
+  document.querySelectorAll('.day').forEach(sec=>{
+    const vis = [...sec.querySelectorAll('.card')].filter(c=>c.style.display!=='none');
+    sec.style.display = vis.length ? '' : 'none';
+    const cnt = sec.querySelector('.day-count'); if(cnt) cnt.textContent = vis.length;
+  });
+}
+
+let litId = null;
+function highlight(id){
+  if(litId){ const o=document.querySelector(`.card[data-id="${litId}"]`); if(o)o.classList.remove('lit'); }
+  litId = id;
+  const el = document.querySelector(`.card[data-id="${id}"]`);
+  if(el){ const sec=el.closest('.day'); if(sec) sec.classList.remove('collapsed'); el.classList.add('lit'); el.scrollIntoView({block:'nearest'}); }
+}
+
+function focusItem(id){
+  const it = byId[id];
+  if(!activeCats.has(it.cat)) activeCats.add(it.cat);
+  if(!activeDays.has(it.day)) activeDays.add(it.day);
+  applyFilters();
+  highlight(id);
+  if(window.innerWidth<=840) document.getElementById('map').scrollIntoView({behavior:'smooth',block:'start'});
+  map.once('moveend', ()=>markers[id].openPopup());     // open after view settles so it auto-pans into view
+  map.flyTo([it.lat,it.lng], 15, {duration:.7});
+  setTimeout(()=>{ if(!markers[id].isPopupOpen()) markers[id].openPopup(); }, 1100); // fallback
+}
+
+/* ---------------- Initial state ---------------- */
+applyFilters();   // hide Brent's picks, sync pills + counts
+const planItems = ITEMS.filter(i=>activeCats.has(i.cat));
+if(planItems.length) map.fitBounds(L.latLngBounds(planItems.map(i=>[i.lat,i.lng])),{padding:[46,46],maxZoom:13});
+</script>
+</body>
+</html>
