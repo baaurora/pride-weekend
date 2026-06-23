@@ -154,10 +154,10 @@
       <h1><span class="flag">🏳️‍🌈</span> Bianca, Brent &amp; Friends</h1>
       <p>NYC Pride Weekend · Thursday June 25 – Sunday June 28, 2026</p>
       <div class="stats">
-        <span class="stat">📍 45 spots</span>
+        <span class="stat">📍 40 spots</span>
         <span class="stat">🌈 4 nights out</span>
-        <span class="stat">🎟 5 to book</span>
-        <span class="stat">🎉 Lucy &amp; Amelia’s parties</span>
+        <span class="stat">🎟 4 to book</span>
+        <span class="stat">🎉 Amelia’s picnic</span>
       </div>
     </div>
   </header>
@@ -183,7 +183,6 @@
 const CATS = {
   event:  {label:'Events',  color:'#ff3d9a', tint:'#ffe6f2', emoji:'🎉'},
   anchor: {label:'Anchors', color:'#a855f7', tint:'#f1e7ff', emoji:'⭐'},
-  bar:    {label:'Bars',    color:'#0ea5a4', tint:'#dcf3f1', emoji:'🍸'},
   culture:{label:'Culture', color:'#26c281', tint:'#e3f8ee', emoji:'🎨'},
   cafe:   {label:'Cafés',   color:'#2f9bff', tint:'#e6f2ff', emoji:'☕'},
   food:   {label:'Food',    color:'#ff8a3d', tint:'#fff0e3', emoji:'🍴'},
@@ -192,7 +191,7 @@ const CATS = {
 /* ---------------- Days (the 2nd tag axis) ---------------- */
 const DAYS = [
   {key:'THU', dow:'Thursday', short:'Thu', date:'Jun 25', num:'25', sub:'Galleries by day, warehouse parties by night.'},
-  {key:'FRI', dow:'Friday',   short:'Fri', date:'Jun 26', num:'26', sub:'Free MoMA → Lucy’s birthday → Paragon till 3.'},
+  {key:'FRI', dow:'Friday',   short:'Fri', date:'Jun 26', num:'26', sub:'Free MoMA early, then Paragon till 3 — the main event.'},
   {key:'SAT', dow:'Saturday', short:'Sat', date:'Jun 27', num:'27', sub:'Pure Honey ballroom at House of Yes.'},
   {key:'SUN', dow:'Sunday',   short:'Sun', date:'Jun 28', num:'28', sub:'March past Stonewall, then Amelia’s picnic.'},
   {key:'any', dow:'Anytime',  short:'Any', date:'',       num:'',   sub:'Work cafés & food to fit around the chaos.'},
@@ -229,32 +228,10 @@ const ITEMS = [
   {id:'moma', cat:'culture', day:'FRI', time:'5:30 – 9 PM', area:'Midtown', name:'MoMA — Free Friday Night',
    desc:'Free for everyone 5:30–9 PM (Uniqlo Free Fridays). Arrive before 5:30. Whitney is also free Fri night.',
    tickets:'free', lat:40.7614, lng:-73.9776},
-  {id:'lucy', cat:'anchor', day:'FRI', time:'9:30 PM', area:'Nolita', name:'Lucy’s Birthday — Café Select',
-   addr:'Café Select · 212 Lafayette St',
-   desc:'Cozy Swiss bistro. No ticket — just show up.',
-   tickets:null, lat:40.7217849, lng:-73.9978025},
-  {id:'paragon', cat:'event', day:'FRI', time:'9:30 PM – 3 AM', area:'Bushwick · 21+', name:'Paragon Pride — Thunderpuss b2b Mike Servito',
+  {id:'paragon', cat:'event', day:'FRI', time:'9:30 PM – 3 AM', area:'Bushwick · 21+', name:'★ Paragon Pride — Thunderpuss b2b Mike Servito',
    addr:'Paragon · 990 Broadway, Brooklyn',
-   desc:'Techno & house all night. You’re covered here.',
+   desc:'THE Friday-night plan — you’re ticketed. Techno & house all night with Thunderpuss b2b Mike Servito. 9:30 PM–3 AM, 21+.',
    tickets:'have', url:'ra.co/events/2415369', urlLabel:'🎟 View event', lat:40.6961068, lng:-73.9340684},
-  {id:'outabt-fri', cat:'event', day:'FRI', time:'10 PM – 4 AM', area:'East Williamsburg', name:'Out + Abt Pride — 9 Bob Note',
-   addr:'9 Bob Note + The Yard · 270 Meserole St, Brooklyn',
-   desc:'Out + Abt’s Friday Pride party across 9 Bob Note + The Yard. 21+. Limited tickets at the door.',
-   tickets:'need', url:'www.eventim.us/event/Out-and-Abt-Pride/682176', urlLabel:'🎟 Get tickets', lat:40.7062, lng:-73.9346},
-
-  // ---- Friday backup: queer bars within reach of Paragon, if you get bored ----
-  {id:'happyfun', cat:'bar', day:'FRI', time:'Open late', area:'Bushwick', name:'Happyfun Hideaway',
-   addr:'1211 Myrtle Ave, Brooklyn',
-   desc:'Queer tiki-dive with a backyard, cheap drinks & local DJs. ~8-min walk from Paragon — the easy bail-out.',
-   tickets:null, lat:40.6985, lng:-73.9275},
-  {id:'moodring', cat:'bar', day:'FRI', time:'Open late', area:'Bushwick', name:'Mood Ring',
-   addr:'1260 Myrtle Ave, Brooklyn',
-   desc:'Astrology-themed queer bar & club with a DJ back room. A few doors past Happyfun, ~9 min from Paragon.',
-   tickets:null, lat:40.6988, lng:-73.9263},
-  {id:'thebush', cat:'bar', day:'FRI', time:'Open late', area:'Bushwick', name:'The Bush',
-   addr:'333 Troutman St, Brooklyn',
-   desc:'“A dyke bar for queers” — Bushwick’s lesbian/queer spot. A bit further NE (~15-min walk or quick ride).',
-   tickets:null, lat:40.7056, lng:-73.9230},
 
   // ---- Saturday ----
   {id:'purehoney', cat:'event', day:'SAT', time:'10 PM', area:'Bushwick', name:'Pure Honey Pride — House of Yes',
