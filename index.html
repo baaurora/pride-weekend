@@ -109,6 +109,8 @@
   .cbuy{font-size:11px;font-weight:700;color:#fff;text-decoration:none;padding:5px 11px;border-radius:999px;
     background:linear-gradient(120deg,#ff3d9a,#a855f7);white-space:nowrap}
   .cbuy.have{background:linear-gradient(120deg,#26c281,#2f9bff)}
+  .maybe{font-size:11.5px;font-weight:600;color:#9a6300;background:#fff6e3;border:1px solid #ffd98a;
+    border-radius:10px;padding:6px 10px;margin-top:8px;line-height:1.4}
 
   /* ---------- Popup ---------- */
   .leaflet-popup-content-wrapper{border-radius:15px;box-shadow:0 14px 36px -10px rgba(40,20,70,.5)}
@@ -218,7 +220,7 @@ const ITEMS = [
   {id:'gaydar', cat:'event', day:'THU', time:'10 PM', area:'Bushwick', name:'Gaydar Pride — House of Yes',
    addr:'House of Yes · 2 Wyckoff Ave, Brooklyn (enter 408 Jefferson St)',
    desc:'Drag from Anania + Amanda Tori Meating. Around $25.50.',
-   tickets:'need', url:'houseofyes.org/calendar', urlLabel:'🎟 Get tickets', lat:40.7068, lng:-73.9236},
+   maybe:true, tickets:'need', url:'houseofyes.org/calendar', urlLabel:'🎟 Get tickets', lat:40.7068, lng:-73.9236},
   {id:'futch', cat:'event', day:'THU', time:'10 PM – 4 AM', area:'East Williamsburg', name:'Futch — 9 Bob Note',
    addr:'9 Bob Note · 270 Meserole St, Brooklyn',
    desc:'Late-night warehouse party at 9 Bob Note (right by 3 Dollar Bill) — doors 10 PM, goes till 4 AM. Tickets locked.',
@@ -237,7 +239,7 @@ const ITEMS = [
   {id:'purehoney', cat:'event', day:'SAT', time:'10 PM', area:'Bushwick', name:'Pure Honey Pride — House of Yes',
    addr:'House of Yes · 2 Wyckoff Ave, Brooklyn (enter 408 Jefferson St)',
    desc:'Ballroom legends: Mike Q, Kevin Aviance, David Elimelech. From about $18.',
-   tickets:'need', url:'houseofyes.org/calendar', urlLabel:'🎟 Get tickets', lat:40.7068, lng:-73.9236},
+   maybe:true, tickets:'need', url:'houseofyes.org/calendar', urlLabel:'🎟 Get tickets', lat:40.7068, lng:-73.9236},
 
   // ---- Sunday ----
   {id:'march', cat:'anchor', day:'SUN', time:'Steps off noon', area:'West Village', name:'NYC Pride March — Stonewall watch point',
@@ -251,7 +253,7 @@ const ITEMS = [
   {id:'outabt', cat:'event', day:'SUN', time:'4 PM – 4 AM', area:'Bushwick · 21+', name:'Out + Abt Pride — Elsewhere',
    addr:'Elsewhere · 599 Johnson Ave, Brooklyn',
    desc:'Pride-Sunday day-into-night takeover of all of Elsewhere — rooftop dancing, drag, four dance floors. From ~$35. 21+.',
-   tickets:'need', url:'www.eventbrite.com/e/out-abt-full-venue-day-night-takeover-tickets-1984419293526', urlLabel:'🎟 Get tickets', lat:40.7091, lng:-73.9230},
+   maybe:true, tickets:'need', url:'www.eventbrite.com/e/out-abt-full-venue-day-night-takeover-tickets-1984419293526', urlLabel:'🎟 Get tickets', lat:40.7091, lng:-73.9230},
 
   // ---- Anytime: Brent's cafés ----
   {id:'787', cat:'cafe', day:'any', area:'Chelsea', name:'787 Coffee (15th St)',
@@ -360,6 +362,7 @@ function dirUrl(it){
   const dest = it.addr ? encodeURIComponent(it.addr.replace(/^[^·]+· /,'').replace(/\s*\([^)]*\)/g,'') + ', New York') : `${it.lat},${it.lng}`;
   return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
 }
+const MAYBE_NOTE = '🤔 We’re thinking about going to these — if anyone wants to convince us to come with them, we’re in!';
 function popupHtml(it){
   const c = CATS[it.cat];
   const buy = it.url ? `<a class="buy ${it.tickets==='have'?'have':''}" href="https://${it.url}" target="_blank" rel="noopener">${it.urlLabel||'Details'} ↗</a>` : '';
@@ -376,6 +379,7 @@ function popupHtml(it){
     <h3>${it.name}</h3>
     ${addr}
     <p>${it.desc}</p>
+    ${it.maybe?`<div class="maybe">${MAYBE_NOTE}</div>`:''}
     ${tk?`<div class="tk-row">${tk}</div>`:''}
     <div class="pop-actions">
       ${buy}
@@ -470,6 +474,7 @@ DAYS.forEach(d=>{
         </div>
         ${addr}
         <div class="desc">${it.desc}</div>
+        ${it.maybe?`<div class="maybe">${MAYBE_NOTE}</div>`:''}
         ${(tk||buy)?`<div class="c-foot">${tk}${buy}</div>`:''}
       </div>`;
     card.onclick = ()=> focusItem(it.id);
